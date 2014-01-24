@@ -31,6 +31,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import java.util.HashMap;
 
+import android.util.Log;
+
 /**
  * This class called by CordovaActivity to play and record audio.
  * The file can be local or over a network using http.
@@ -44,16 +46,23 @@ import java.util.HashMap;
  */
 public class AudioHandler extends CordovaPlugin {
 
+	public static final String DTAG="MediaAnalysisJ";
     public static String TAG = "AudioHandler";
     HashMap<String, AudioPlayer> players;	// Audio player object
     ArrayList<AudioPlayer> pausedForPhone;     // Audio players that were paused when phone call came in
+
+	private boolean isMediaWorking;
+
 
     /**
      * Constructor.
      */
     public AudioHandler() {
+		isMediaWorking=false;
+		Log.i(DTAG,"AudioHandler structure begin");
         this.players = new HashMap<String, AudioPlayer>();
         this.pausedForPhone = new ArrayList<AudioPlayer>();
+		Log.i(DTAG,"AudioHandler structure end");
     }
 
     /**
@@ -64,14 +73,25 @@ public class AudioHandler extends CordovaPlugin {
      * @return 				A PluginResult object with a status and message.
      */
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+
+		Log.i(DTAG,"AudioHandler execute begin");
+
         PluginResult.Status status = PluginResult.Status.OK;
         String result = "";
 
         if (action.equals("startRecordingAudio")) {
             this.startRecordingAudio(args.getString(0), FileHelper.stripFileProtocol(args.getString(1)));
         }
+		if (action.equals("startRecordAsync")) { //custom
+			startRecordAsync(args.getString(0), FileHelper.stripFileProtocol(args.getString(1)),callbackContext);
+			return true;
+        }
         else if (action.equals("stopRecordingAudio")) {
             this.stopRecordingAudio(args.getString(0));
+        }
+		else if (action.equals("stopRecordAsync")) {
+			stopRecordAsync(args.getString(0), callbackContext);
+			return true;
         }
         else if (action.equals("startPlayingAudio")) {
             this.startPlayingAudio(args.getString(0), FileHelper.stripFileProtocol(args.getString(1)));
@@ -114,8 +134,9 @@ public class AudioHandler extends CordovaPlugin {
         else { // Unrecognized action.
             return false;
         }
-
+		Log.i(DTAG,"AudioHandler execute mid");
         callbackContext.sendPluginResult(new PluginResult(status, result));
+		Log.i(DTAG,"AudioHandler execute end");
 
         return true;
     }
@@ -192,18 +213,65 @@ public class AudioHandler extends CordovaPlugin {
         return true;
     }
 
+	///
+	
+	
+	private void startRecordAsync(final String id, final String file,final CallbackContext callbackContext) {
+		
+		final PluginResult.Status status = PluginResult.Status.OK;
+		final String result = "";
+		
+		if(!isMediaWorking){
+			
+			cordova.getThreadPool().execute(new Runnable(){
+
+				@Override
+				public void run() {
+					Log.i(DTAG,"startRecordAsync begin");
+					isMediaWorking=true;
+					startRecordingAudio(id, file);
+					Log.i(DTAG,"startRecordAsync runOnUiThread begin");
+					cordova.getActivity().runOnUiThread(new Runnable() {  
+						public void run() {  
+							callbackContext.sendPluginResult(new PluginResult(status, result));// Thread-safe.  
+						}  
+				   });  
+				   Log.i(DTAG,"startRecordAsync runOnUiThread end");
+				  isMediaWorking=false;
+				  Log.i(DTAG,"startRecordAsync end");
+			}});
+		}
+		//this.startRecordingAudio(id, file);
+	}
+	
+	private void stopRecordAsync(String id,CallbackContext callbackContext) {
+		Log.i(DTAG,"stopRecordAsync begin");
+        PluginResult.Status status = PluginResult.Status.OK;
+        String result = "";
+		this.stopRecordingAudio(id);
+		callbackContext.sendPluginResult(new PluginResult(status, result));
+		Log.i(DTAG,"stopRecordAsync end");
+	}
+	
+	///
+
+
+
     /**
      * Start recording and save the specified file.
      * @param id				The id of the audio player
      * @param file				The name of the file
      */
     public void startRecordingAudio(String id, String file) {
+		Log.i(DTAG,"AudioHandler startRecordingAudio begin");
         AudioPlayer audio = this.players.get(id);
         if ( audio == null) {
             audio = new AudioPlayer(this, id, file);
             this.players.put(id, audio);
         }
+		Log.i(DTAG,"AudioHandler startRecordingAudio mid");
         audio.startRecording(file);
+		Log.i(DTAG,"AudioHandler startRecordingAudio end");
     }
 
     /**

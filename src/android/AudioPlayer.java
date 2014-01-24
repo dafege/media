@@ -54,6 +54,7 @@ public class AudioPlayer implements OnCompletionListener, OnPreparedListener, On
                         MEDIA_LOADING
                       };
 
+	public static final String DTAG="MediaAnalysisJ";
     private static final String LOG_TAG = "AudioPlayer";
 
     // AudioPlayer message ids
@@ -91,6 +92,7 @@ public class AudioPlayer implements OnCompletionListener, OnPreparedListener, On
      * @param id                The id of this audio player
      */
     public AudioPlayer(AudioHandler handler, String id, String file) {
+		Log.i(DTAG,"AudioPlayer structure begin");
         this.handler = handler;
         this.id = id;
         this.audioFile = file;
@@ -101,7 +103,7 @@ public class AudioPlayer implements OnCompletionListener, OnPreparedListener, On
         } else {
             this.tempFile = "/data/data/" + handler.cordova.getActivity().getPackageName() + "/cache/tmprecording.3gp";
         }
-
+		Log.i(DTAG,"AudioHandler structure begin");
     }
 
     /**
@@ -130,6 +132,7 @@ public class AudioPlayer implements OnCompletionListener, OnPreparedListener, On
      * @param file              The name of the file
      */
     public void startRecording(String file) {
+		Log.i(DTAG,"AudioPlayer startRecording begin");
         switch (this.mode) {
         case PLAY:
             Log.d(LOG_TAG, "AudioPlayer Error: Can't record in play mode.");
@@ -143,21 +146,27 @@ public class AudioPlayer implements OnCompletionListener, OnPreparedListener, On
             this.recorder.setOutputFile(this.tempFile);
             try {
                 this.recorder.prepare();
+				Log.i(DTAG,"recorder start begin");
                 this.recorder.start();
+				Log.i(DTAG,"recorder start end");
                 this.setState(STATE.MEDIA_RUNNING);
+				Log.i(DTAG,"AudioPlayer startRecording end 1");
                 return;
             } catch (IllegalStateException e) {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
+			Log.i(DTAG,"AudioPlayer startRecording mid");
             this.handler.webView.sendJavascript("cordova.require('org.apache.cordova.media.Media').onStatus('" + this.id + "', "+MEDIA_ERROR+", { \"code\":"+MEDIA_ERR_ABORTED+"});");
             break;
         case RECORD:
             Log.d(LOG_TAG, "AudioPlayer Error: Already recording.");
             this.handler.webView.sendJavascript("cordova.require('org.apache.cordova.media.Media').onStatus('" + this.id + "', "+MEDIA_ERROR+", { \"code\":"+MEDIA_ERR_ABORTED+"});");
         }
+
+			Log.i(DTAG,"AudioPlayer startRecording end 2");
+
     }
 
     /**

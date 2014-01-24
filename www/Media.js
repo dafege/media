@@ -1,4 +1,4 @@
-/*
+cordova.define("org.apache.cordova.media.Media", function(require, exports, module) {/*
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -138,6 +138,21 @@ Media.prototype.stopRecord = function() {
     exec(null, this.errorCallback, "Media", "stopRecordingAudio", [this.id]);
 };
 
+
+/**
+ * custom Start recording audio file.
+ */
+Media.prototype.startRecordAsync = function() {
+    exec(null, this.errorCallback, "Media", "startRecordAsync", [this.id, this.src]);
+};
+
+/**
+ * custom Stop recording audio file.
+ */
+Media.prototype.stopRecordAsync = function() {
+    exec(null, this.errorCallback, "Media", "stopRecordAsync", [this.id]);
+};
+
 /**
  * Release the resources.
  */
@@ -193,3 +208,4 @@ Media.onStatus = function(id, msgType, value) {
 };
 
 module.exports = Media;
+});

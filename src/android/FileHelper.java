@@ -19,9 +19,11 @@
 package org.apache.cordova.media;
 
 import android.net.Uri;
+import android.util.Log;
+
 
 public class FileHelper {
-
+	public static final String DTAG="MediaAnalysisJ";
     /**
      * Removes the "file://" prefix from the given URI string, if applicable.
      * If the given URI string doesn't have a "file://" prefix, it is returned unchanged.
@@ -30,9 +32,11 @@ public class FileHelper {
      * @return a path without the "file://" prefix
      */
     public static String stripFileProtocol(String uriString) {
+		Log.i(DTAG,"FileHelper stripFileProtocol begin");
         if (uriString.startsWith("file://")) {
             return Uri.parse(uriString).getPath();
         }
+		Log.i(DTAG,"FileHelper stripFileProtocol end");
         return uriString;
     }
 }
